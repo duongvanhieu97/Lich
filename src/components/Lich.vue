@@ -1,7 +1,8 @@
 <template>
   <div>
     <div class="header">
-      <p v-if="show"> {{ layrathu }},{{ thang }} {{ ngays }} {{ nam }}</p>
+      <p v-if="show"> {{thang}} {{ngays}} {{nam}}</p>
+      <p v-if="show">{{ thungto.thangs }} {{ thungto.ngay }} {{ thungto.nams }}</p>
       <h4>{{ layrathu }}</h4>
     </div>
     <h2>Tháng {{ thang }} {{ ngays }} {{ nam }}</h2>
@@ -22,14 +23,13 @@
         <th>CN</th>
       </tr>
       <tr v-for="(tuan, indexTuan) in hienthitrong1thang" v-bind:key="indexTuan">
-        <td v-for="(ngay, index) in tuan" v-bind:key="index">
-          <button v-if="this.ngays === new Date().getDate()" v-on:click="show = !show" style="background-color: red; width: 100%; border:none;height: 23px ;border-radius: 50% ">
-            {{ngay}}
+        <td v-for="(soNgay, index) in tuan" v-bind:key="index">
+          <button v-if="soNgay.ngay === new Date().getDate() && soNgay.thangs === new Date().getMonth()" v-on:click="show = !show && soNgay.ngay" style="background-color: red; width: 100%; border:none;height: 23px ;border-radius: 50% ">
+            {{soNgay.ngay}}
           </button>
-          <button v-else v-on:click="show = !show" style=" width: 100%; border:none;height: 23px ;border-radius: 50% " >
-            {{ngay}}
+          <button v-else v-on:click="show = !show && soNgay.ngay" style=" width: 100%; border:none;height: 23px ;border-radius: 50% " >
+            {{soNgay.ngay}}
           </button>
-<!--          <button v-on:click="show = !show" id="doi_mau">{{ ngay }}</button>-->
         </td>
       </tr>
     </table>
@@ -43,13 +43,15 @@ export default {
   data() {
     return {
       today: new Date(),
-      show: false
+      show: false,
+      thungto : [[]],
+
     }
   },
   computed: {
     //làm những cái gì tiếp theo:
     // 1: thêm những chỗ trống vào các ngày cuối vs đầu tháng sau or trước trong 1 tháng --> làm đc rồi
-    // 2: thêm dấu đỏ (invalid)
+    // 2: thêm dấu đỏ (invalid) --> hoàn thành
     // 3: nếu ngày đầu tháng mà vào thứ 7 or cn thì nó tự nhẩy xuống thứ 2 --> fixx dược rồi
     // (nếu sửa lỗi 1 mà không bị lỗi nữa thì không phải sửa )
     // 4: click vô ngày nào thì nó hiện ra thứ ngày tháng năm của ngày đó
@@ -59,7 +61,8 @@ export default {
       let ngayKetThucthang = this.songaytrong1thang()
       let y = this.today.getDay()
       let x = null
-      let thungto = [[]]
+      let thang1 = null
+      let nam1 = null
       let mangTotal = []
       let songaygiamdan = []
       if (y === 0) {
@@ -71,35 +74,42 @@ export default {
       } else {
         x = 7 + (y - (this.ngays % 7))
       }
+      if (this.thang -1 === 0) {
+        thang1 = 12
+      } else {
+        thang1 = this.thang -1
+      }
+      if (this.thang -1 === 0) {
+        nam1 = this.nam -1
+      } else {
+        nam1 = this.nam
+      }
 
       for (let i = this.songaytrongthangtruocdo(); i > 0; i--) {
-        songaygiamdan.push(i)
+        songaygiamdan.push({thu:this.layrathu , ngay:i, thangs:thang1 , nams: nam1 })
       }
 
       for (let i = 0; i < x; i++) {
         mangTotal.unshift(songaygiamdan[i])
       }
       for (let i = 1; i <= ngayKetThucthang; i++) {
-        mangTotal.push(i)
+        mangTotal.push({ngay:i, thangs:thang1 , nams: nam1})
       }
       for (let i = 1; i <= 42 - ngayKetThucthang - x; i++) {
-        mangTotal.push(i)
+        mangTotal.push({ngay:i, thangs:thang1 + 1 , nams: nam1})
       }
       for (let j = 0; j < mangTotal.length; j++) {
         let value = mangTotal[j]
         let thungmoi = []
-        if (thungto[thungto.length - 1].length === 7) {
+        if (this.thungto[this.thungto.length - 1].length === 7) {
           thungmoi.push(value)
-          thungto.push(thungmoi)
+          this.thungto.push(thungmoi)
         } else {
-          thungto[thungto.length-1].push(value)
+          this.thungto[this.thungto.length-1].push(value)
 
         }
       }
-      // console.log(thungto);
-
-
-      return thungto
+      return this.thungto
     },
 
 
@@ -139,16 +149,8 @@ export default {
     nam() {
       return this.today.getFullYear()
     },
-    // theky() {
-    //   let theky = this.nam.toString().slice(0, 1)
-    //   return parseInt(theky)
-    // }
   },
   methods: {
-    // tính toán ra số thứ cn = 0 , t2 =1, ...
-    // tinhtoanrathu() {
-    //   return ((13 * this.thang - 1) / 5 + this.nam / 4 + this.theky / 4 + this.ngays + this.nam - 2 * this.theky) % 7
-    // },
     thang2namnhuan() {
       if ((this.nam % 4) || ((this.nam % 100 === 0) && (this.nam % 400))) {
         return 0
@@ -176,14 +178,4 @@ export default {
 </script>
 
 <style scoped>
-/*#doi_mau {*/
-/*  background-color: #fff;*/
-/*  border: none;*/
-
-/*}*/
-
-/*#doi_mau:first-child {*/
-/*  background-color: red;*/
-/*}*/
-
 </style>
